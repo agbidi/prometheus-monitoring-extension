@@ -1,0 +1,120 @@
+# Metric prefix to show metrics in one tier (HIGHLY RECOMMENDED)
+# Please follow the doc for instructions on retrieving the tier ID: https://docs.appdynamics.com/appd/onprem/24.x/25.2/en/infrastructure-visibility/machine-agent/extensions-and-custom-metrics/build-a-monitoring-extension-using-java#id-.BuildaMonitoringExtensionUsingJavav24.4-MetricPath
+# metricPrefix: "Server|Component:k8s|Custom Metrics|Prometheus"
+
+#Metric Prefix when SIM is enabled"
+metricPrefix: "Custom Metrics|Prometheus"
+
+servers:
+- url: "http://ec2-35-159-224-161.eu-central-1.compute.amazonaws.com:9090"
+  # Bearer token for authentication (e.g., OpenShift ServiceAccount token)
+  # authToken: "your_prometheus_bearer_token_here"
+  metrics:
+  # K8s Cluster metrics
+  - name: cluster_node_count
+    promql: "sum(min_over_time(kube_node_status_condition{condition='Ready', status='true'}[60s]))"
+    labelFilters:
+    alias: "Cluster Node Count"
+    aggregationType: AVERAGE
+    timeRollUpType: AVERAGE
+    clusterRollUpType: COLLECTIVE
+  # K8s Node metrics
+  - name: node_cpu_usage
+    promql: "100 * (sum by (instance) (rate(node_cpu_seconds_total{mode!='idle', mode!='iowait', mode!='steal'}[60s]))/count by (instance) (node_cpu_seconds_total{mode='idle'}))"
+    labelFilters:
+    - name: instance
+      value: ".*"
+    alias: "Node CPU Usage"
+    aggregationType: AVERAGE
+    timeRollUpType: AVERAGE
+    clusterRollUpType: INDIVIDUAL
+  - name: node_mem_usage
+    promql: "100 * ((avg_over_time(node_memory_MemTotal_bytes[60s]) - avg_over_time(node_memory_MemAvailable_bytes[60s]))/avg_over_time(node_memory_MemTotal_bytes[60s]))"
+    labelFilters:
+    - name: instance
+      value: ".*"
+    alias: "Node Memory Usage"
+    aggregationType: AVERAGE
+    timeRollUpType: AVERAGE
+    clusterRollUpType: INDIVIDUAL
+  # K8s Workload metrics
+  - name: deployment_availability
+    promql: "100 * (min_over_time(kube_deployment_status_replicas_available{namespace=~'%namespace%'}[60s])/min_over_time(kube_deployment_spec_replicas{namespace=~'%namespace%'}[60s]))"
+    alias: "Deployment Availability"
+    labelFilters:
+    - name: namespace
+      value: "spring-petclinic|kube-system"
+    - name: deployment
+      value: ".*"
+    aggregationType: AVERAGE
+    timeRollUpType: AVERAGE
+    clusterRollUpType: INDIVIDUAL
+    # K8s PVC metrics
+  - name: pvc_capacity
+    promql: "kube_persistentvolumeclaim_resource_requests_storage_bytes{namespace=~'%namespace%'}"
+    alias: "PVC Capacity"
+    labelFilters:
+    - name: namespace
+      value: "spring-petclinic|kube-system"
+    - name: persistentvolumeclaim
+      value: ".*"
+    aggregationType: AVERAGE
+    timeRollUpType: AVERAGE
+    clusterRollUpType: COLLECTIVE
+
+
+#Replaces characters in metric name with the specified characters.
+# "replace" takes any regular expression
+# "replaceWith" takes the string to replace the matched characters
+metricPathReplacements:
+- replace: ":"
+  replaceWith: "-"
+- replace: "|"
+  replaceWith: "="
+- replace: ","
+  replaceWith: "#"
+
+
+# Number of concurrent threads
+numberOfThreads: 10
+
+#Thread timeout in seconds
+threadTimeOut: 60
+
+#You can leave username empty if no proxy user is required
+proxy:
+  uri: ""
+  username: ""
+
+#example proxy settings:
+#uri: "http://localhost:8080"
+
+
+# If any of the following fields are not set, the values of the specific fields are set from the system properties of the corresponding fields as specified in the comments.
+# If the system properties are not set for the field, then the data is retrieved from machine agent configFile. Please refer to ControllerInfoFactory for more details.
+controllerInfo:
+  controllerHost: "" # -Dappdynamics.controller.hostName
+  controllerPort: 8090 # -Dappdynamics.controller.port
+  controllerSslEnabled: false # -Dappdynamics.controller.ssl.enabled
+  enableOrchestration: false # N/A
+  uniqueHostId: "" # -Dappdynamics.agent.uniqueHostId
+  username: "" # -Dappdynamics.agent.monitors.controller.username
+  password: "" # -Dappdynamics.agent.monitors.controller.password
+  encryptedPassword: "" # -Dappdynamics.agent.monitors.controller.encryptedPassword
+  accountAccessKey: "" # -Dappdynamics.agent.accountAccessKey
+  account: "" # -Dappdynamics.agent.accountName
+  machinePath: "" # -Dappdynamics.machine.agent.hierarchyPath
+  simEnabled: false # -Dappdynamics.sim.enabled
+  applicationName: "" # -Dappdynamics.agent.applicationName
+  tierName: "" # -Dappdynamics.agent.tierName
+  nodeName: "" # -Dappdynamics.agent.nodeName
+
+encryptionKey: "abcd"
+
+# This field contains the various parameters required to initiate a connection and send data to the AppDynamics Events Service.
+# eventsServiceParameters:
+#   host: ""
+#   port: 443
+#   globalAccountName: ""
+#   eventsApiKey: ""
+#   useSSL: true
