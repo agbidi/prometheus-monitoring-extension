@@ -1,7 +1,3 @@
-Here's a README.md file for the AppDynamics Prometheus Monitoring Extension, based on your `config.yml` and the example provided:
-
----
-
 # AppDynamics Prometheus Monitoring Extension
 
 This AppDynamics Machine Agent extension collects metrics from Prometheus servers via PromQL and sends them to the AppDynamics Controller, allowing you to monitor your Prometheus-exposed metrics within AppDynamics.
