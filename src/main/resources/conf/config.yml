@@ -6,7 +6,7 @@
 metricPrefix: "Custom Metrics|Prometheus"
 
 servers:
-- url: "http://ec2-35-159-224-161.eu-central-1.compute.amazonaws.com:9090"
+- url: "http://<prometheus_host>:9090"
   # Bearer token for authentication (e.g., OpenShift ServiceAccount token)
   # authToken: "your_prometheus_bearer_token_here"
   metrics:
