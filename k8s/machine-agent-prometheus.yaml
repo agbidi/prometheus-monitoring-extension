@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: machine-agent-prometheus
+  namespace: appdynamics
+spec:
+  selector:
+    matchLabels:
+      app: machine-agent-prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: machine-agent-prometheus
+    spec:
+      containers:
+      - name: machine-agent-prometheus
+        image: docker.io/agbidi/machine-agent:25.7.0-prometheus
+        env:
+        - name: APPDYNAMICS_CONTROLLER_HOST_NAME
+          value: "<fixme>"
+        - name: APPDYNAMICS_CONTROLLER_PORT
+          value: "443"
+        - name: APPDYNAMICS_CONTROLLER_SSL_ENABLED
+          value: "true"
+        - name: APPDYNAMICS_AGENT_ACCOUNT_NAME
+          value: "<fixme>"
+        - name: APPDYNAMICS_AGENT_APPLICATION_NAME
+          value: "<fixme>"
+        - name: APPDYNAMICS_AGENT_TIER_NAME
+          value: "prometheus-monitoring"
+        - name: APPDYNAMICS_AGENT_NODE_NAME
+          value: "prometheus-monitoring-1"
+        - name: APPDYNAMICS_SIM_ENABLED
+          value: "true"
+        - name: APPDYNAMICS_AGENT_UNIQUE_HOST_ID
+          value: "PrometheusMonitor"
+        - name: APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY
+          valueFrom:
+             secretKeyRef:
+               name: cluster-agent-secret
+               key: controller-key
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/appdynamics/monitors/PrometheusMonitor/config.yml
+          subPath: config.yml
+        resources:
+          requests:
+            cpu: 200m
+            memory: 200Mi
+          limits:
+            cpu: 300m
+            memory: 300Mi
+      volumes:
+      - name: config-volume
+        # kubectl -n appdynamics create configmap machine-agent-prometheus-config --from-file=config.yml
+        configMap:
+          name: machine-agent-prometheus-config
