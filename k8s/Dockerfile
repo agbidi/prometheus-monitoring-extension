@@ -19,3 +19,5 @@ LABEL name="AppDynamics Machine Agent + Prometheus Monitoring Extension" \
       description="AppDynamics solution for monitoring Prometheus in containerized environment"
 
 COPY --from=installer /opt/appdynamics/PrometheusMonitor /opt/appdynamics/monitors
+
+RUN ln -s $JAVA_HOME /opt/appdynamics/java
